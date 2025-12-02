@@ -1,5 +1,3 @@
-# calories-yt
-
 <!doctype html>
 <html lang="fr">
 <head>
@@ -7,7 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Calories YouTube — Fitness</title>
 
-  <!-- Manifest & favicon (icône SVG dataURI incluse) -->
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="data:image/svg+xml;utf8,
   <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>
@@ -30,21 +27,21 @@
     }
     html,body{height:100%;margin:0;font-family:Inter,Arial,Helvetica,sans-serif;background:linear-gradient(180deg,var(--bg),#070707);color:#fff;}
     .wrap{max-width:920px;margin:18px auto;padding:18px;}
-    header{display:flex;align-items:center;gap:12px}
-    h1{margin:0;font-size:18px}
-    .card{background:var(--card);padding:14px;border-radius:12px;margin-top:12px;box-shadow:0 6px 18px rgba(0,0,0,0.6)}
-    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
-    input,select,button{width:100%;padding:10px;border-radius:8px;border:0;background:var(--glass);color:#fff;font-size:15px}
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .actions{display:flex;gap:8px;margin-top:10px}
-    button.primary{background:linear-gradient(180deg,var(--accent),var(--accent-2));color:#fff;font-weight:600}
+    header{display:flex;align-items:center;gap:12px;}
+    h1{margin:0;font-size:18px;}
+    .card{background:var(--card);padding:14px;border-radius:12px;margin-top:12px;box-shadow:0 6px 18px rgba(0,0,0,0.6);}
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px;}
+    input,select,button{width:100%;padding:10px;border-radius:8px;border:0;background:var(--glass);color:#fff;font-size:15px;}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .actions{display:flex;gap:8px;margin-top:10px;}
+    button.primary{background:linear-gradient(180deg,var(--accent),var(--accent-2));color:#fff;font-weight:600;}
     #videos{margin-top:12px;}
-    .vid{display:flex;justify-content:space-between;gap:12px;padding:10px;border-radius:10px;background:rgba(255,255,255,0.02);align-items:center;margin-bottom:8px}
-    .meta{font-size:13px;color:var(--muted)}
-    .small{font-size:12px;color:var(--muted)}
-    footer{margin-top:18px;color:var(--muted);font-size:13px}
-    .flex{display:flex;gap:8px;align-items:center}
-    @media(max-width:600px){.row{grid-template-columns:1fr}}
+    .vid{display:flex;justify-content:space-between;gap:12px;padding:10px;border-radius:10px;background:rgba(255,255,255,0.02);align-items:center;margin-bottom:8px;}
+    .meta{font-size:13px;color:var(--muted);}
+    .small{font-size:12px;color:var(--muted);}
+    footer{margin-top:18px;color:var(--muted);font-size:13px;}
+    .flex{display:flex;gap:8px;align-items:center;}
+    @media(max-width:600px){.row{grid-template-columns:1fr;}}
   </style>
 </head>
 <body>
@@ -111,12 +108,10 @@
 
   <script src="app.js"></script>
   <script>
-    // prompt install on supported browsers (soft prompt)
     let deferredPrompt;
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
-      // show a brief toast inviting to install
       if (confirm('Souhaites-tu installer l\'application pour l\'ajouter à ton écran d\'accueil ?')) {
         deferredPrompt.prompt();
         deferredPrompt.userChoice.then(() => deferredPrompt = null);
@@ -125,127 +120,3 @@
   </script>
 </body>
 </html>
-
-
-// app.js
-const $ = id=>document.getElementById(id);
-const VIDEOS_KEY = 'yt_videos_calories_v1';
-
-function load(){
-  const raw = localStorage.getItem(VIDEOS_KEY);
-  return raw ? JSON.parse(raw) : [];
-}
-
-function save(arr){ localStorage.setItem(VIDEOS_KEY, JSON.stringify(arr)); }
-
-function pretty(n){ return Number(n).toFixed(1) + ' kcal'; }
-
-function render(){
-  const list = load();
-  const container = $('videos'); container.innerHTML = '';
-  let total = 0;
-  list.forEach((v, idx)=>{
-    const calories = v.met * v.poids * (v.minutes/60);
-    total += calories;
-    const el = document.createElement('div'); el.className='vid';
-    el.innerHTML = `
-      <div>
-        <div style="font-weight:600">${v.title || 'Vidéo'} <span class="small">(${v.minutes} min)</span></div>
-        <div class="meta"><a href="${v.lien}" target="_blank" style="color:var(--muted);text-decoration:underline">${v.lien}</a></div>
-      </div>
-      <div style="text-align:right">
-        <div style="font-weight:700">${calories.toFixed(1)} kcal</div>
-        <div class="small">${v.type}</div>
-        <div style="margin-top:6px"><button data-idx="${idx}" class="remove">Supprimer</button></div>
-      </div>
-    `;
-    container.appendChild(el);
-  });
-
-  $('total').innerText = total.toFixed(1) + ' kcal';
-
-  // attach remove handlers
-  Array.from(document.querySelectorAll('.remove')).forEach(btn=>{
-    btn.addEventListener('click', e=>{
-      const i = Number(btn.dataset.idx);
-      const arr = load(); arr.splice(i,1); save(arr); render();
-    });
-  });
-}
-
-function tryExtractTitle(url, cb){
-  // We can't call YouTube API without key. Try to extract a readable slug from URL.
-  try{
-    const u = new URL(url);
-    if(u.hostname.includes('youtube') || u.hostname.includes('youtu.be')){
-      const v = u.searchParams.get('v') || u.pathname.split('/').pop();
-      cb('YouTube — ' + v);
-      return;
-    }
-  } catch(e){}
-  cb('Vidéo');
-}
-
-document.addEventListener('DOMContentLoaded', ()=>{
-  render();
-  $('ajouterBtn').addEventListener('click', ()=>{
-    const poids = Number($('poids').value) || 70;
-    const lien = $('lien').value.trim();
-    const minutes = Number($('minutes').value) || 30;
-    const met = Number($('type').value) || 7;
-    const type = $('type').options[$('type').selectedIndex].text;
-
-    if(!lien){
-      alert('Colle le lien YouTube ou une description.');
-      return;
-    }
-
-    tryExtractTitle(lien, (title)=>{
-      const arr = load();
-      arr.push({lien, minutes, met, type, poids, title, added:Date.now()});
-      save(arr); render();
-      $('lien').value=''; $('minutes').value='30';
-    });
-  });
-
-  $('viderBtn').addEventListener('click', ()=>{
-    if(confirm('Vider toute la liste ?')){ localStorage.removeItem(VIDEOS_KEY); render(); }
-  });
-});
-
-
-
-{
-  "name": "Calories YouTube — Fitness",
-  "short_name": "CaloriesYT",
-  "start_url": "./index.html",
-  "display": "standalone",
-  "background_color": "#0e0e10",
-  "theme_color": "#111111",
-  "icons": [
-    {
-      "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='18' fill='%23221f1f'/><g transform='translate(12,10) scale(0.76)'><path d='M30 10 C35 2, 50 3, 47 20 C60 18, 66 30, 56 38 C68 39, 74 54, 56 64 C34 77, 18 62, 30 36 C24 54, 12 60, 12 60 C18 40, 28 22, 30 10 Z' fill='%23ff3b30'/><path d='M50 26 C53 22, 64 20, 64 34 C64 46, 52 56, 50 64 C48 56,36 46,36 34 C36 22,47 22,50 26 Z' fill='%23ffdfdf'/></g></svg>",
-      "sizes": "192x192",
-      "type": "image/svg+xml"
-    }
-  ]
-}
-
-
-// service-worker.js - simple caching for offline
-const CACHE = 'calories-cache-v1';
-const OFFLINE_URL = './index.html';
-self.addEventListener('install', (e)=>{
-  e.waitUntil(
-    caches.open(CACHE).then(cache=>{
-      return cache.addAll([OFFLINE_URL, './', './index.html', './app.js', './manifest.json']);
-    })
-  );
-  self.skipWaiting();
-});
-self.addEventListener('activate', (e)=>{ e.waitUntil(self.clients.claim()); });
-self.addEventListener('fetch', (e)=>{
-  e.respondWith(
-    caches.match(e.request).then(resp => resp || fetch(e.request).catch(()=>caches.match(OFFLINE_URL)))
-  );
-});
